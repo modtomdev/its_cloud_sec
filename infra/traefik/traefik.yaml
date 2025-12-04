@@ -1,0 +1,24 @@
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections: null
+
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: app-network
+  
+  file:
+    filename: /etc/traefik/dynamic/dynamic.yml
+
+certificatesResolvers: # review
+  letsencrypt:
+    acme:
+      email: your.email@example.com # change
+      storage: acme.json
+      httpChallenge:
+        entryPoint: web

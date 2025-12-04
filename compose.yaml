@@ -1,0 +1,80 @@
+services:
+
+  traefik:
+    image: traefik:v3
+    container_name: traefik
+    command:
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--log.level=INFO"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro 
+      - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro   
+      - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
+      - ./acme.json:/etc/traefik/acme.json # acme Let's Encrypt
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  backend:
+    image: secapp-backend:latest
+    build: ./backend
+    ports:
+      - "8000:8000"
+    secrets:
+      - aws_access_key
+      - aws_secret_key
+      - aws_region
+      - s3_bucket
+      - dynamo_table
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+
+  frontend:
+    image: secapp-frontend:latest
+    build: ./frontend
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    deploy:
+      replicas: 1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-web.rule=Host(`example.com`)"
+      - "traefik.http.routers.frontend-web.entrypoints=web"
+      - "traefik.http.routers.frontend-web.middlewares=redirect-to-https@file"
+      
+      - "traefik.http.routers.frontend-secure.rule=Host(`example.com`)"
+      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
+      - "traefik.http.routers.frontend-secure.tls=true"
+      - "traefik.http.routers.frontend-secure.tls.certresolver=letsencrypt"
+      
+      - "traefik.http.services.frontend-service.loadbalancer.server.port=80"
+      
+      
+networks:
+  app-network:
+
+secrets:
+  aws_access_key:
+    external: true
+  aws_secret_key:
+    external: true
+  aws_region:
+    external: true
+  s3_bucket:
+    external: true
+  dynamo_table:
+    external: true
