@@ -1,14 +1,10 @@
+# Intended for swarm mode use, launch with: docker stack deploy -c compose.yaml -d your_stack_name
+# Create docker secrets on the Docker host before deploying the stack
+
 services:
 
   traefik:
     image: traefik:v3
-    container_name: traefik
-    command:
-      - "--providers.file.directory=/etc/traefik/dynamic"
-      - "--providers.file.watch=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--log.level=INFO"
     ports:
       - "80:80"
       - "443:443"
@@ -16,7 +12,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro 
       - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro   
       - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
-      - ./acme.json:/etc/traefik/acme.json # acme Let's Encrypt
+      - ./infra/traefik/acme.json:/etc/traefik/acme.json # acme Let's Encrypt
     networks:
       - app-network
     deploy:
@@ -50,11 +46,11 @@ services:
       replicas: 1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend-web.rule=Host(`example.com`)"
+      - "traefik.http.routers.frontend-web.rule=Host(`its.secapp.com`)"
       - "traefik.http.routers.frontend-web.entrypoints=web"
       - "traefik.http.routers.frontend-web.middlewares=redirect-to-https@file"
       
-      - "traefik.http.routers.frontend-secure.rule=Host(`example.com`)"
+      - "traefik.http.routers.frontend-secure.rule=Host(`its.secapp.com`)"
       - "traefik.http.routers.frontend-secure.entrypoints=websecure"
       - "traefik.http.routers.frontend-secure.tls=true"
       - "traefik.http.routers.frontend-secure.tls.certresolver=letsencrypt"

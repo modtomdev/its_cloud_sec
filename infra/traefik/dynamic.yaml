@@ -1,6 +1,1 @@
-http:
-  middlewares:
-    redirect-to-https:
-      redirectScheme:
-        scheme: https
-        permanent: true
+# Traefik routers and services are directly defined in the docker compose labels but they can also be stated here if you prefer.
