@@ -28,8 +28,6 @@ services:
   backend:
     image: secapp-backend:latest
     build: ./backend
-    ports:
-      - "8000:8000"
     secrets:
       - aws_access_key
       - aws_secret_key
@@ -61,8 +59,7 @@ services:
       - "traefik.http.routers.frontend-secure.tls=true"
       - "traefik.http.routers.frontend-secure.tls.certresolver=letsencrypt"
       
-      - "traefik.http.services.frontend-service.loadbalancer.server.port=80"
-      
+      - "traefik.http.services.frontend-service.loadbalancer.server.port=8080"
       
 networks:
   app-network:
