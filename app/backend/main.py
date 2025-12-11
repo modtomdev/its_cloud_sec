@@ -18,7 +18,7 @@ def get_secret(secret_name):
         with open(f"/run/secrets/{secret_name}", "r") as f:
             return f.read().strip()
     except IOError:
-        return None
+        raise FileNotFoundError
 
 AWS_ACCESS_KEY = get_secret("aws_access_key")
 AWS_SECRET_KEY = get_secret("aws_secret_key")
