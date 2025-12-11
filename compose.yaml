@@ -12,7 +12,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro 
       - ./infra/traefik/traefik.yml:/etc/traefik/traefik.yml:ro   
       - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
-      - ./infra/traefik/acme.json:/etc/traefik/acme.json # acme Let's Encrypt
+      - ./infra/traefik/certs/cloudsec.crt:/var/traefik/certs/cloudsec.crt:ro
+      - ./infra/traefik/certs/cloudsec.key:/var/traefik/certs/cloudsec.key:ro
     networks:
       - app-network
     deploy:
@@ -48,8 +49,7 @@ services:
       - "traefik.enable=true"  
       - "traefik.http.routers.frontend-secure.tls=true"
       - "traefik.http.routers.frontend-secure.entrypoints=websecure"
-      - "traefik.http.routers.frontend-secure.rule=Host(`its.secapp.com`)"
-      - "traefik.http.routers.frontend-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend-secure.rule=Host(`dashboard.itssecapp.com`)"
       - "traefik.http.services.frontend-service.loadbalancer.server.port=8080"
       
 networks:

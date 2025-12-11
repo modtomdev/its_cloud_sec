@@ -7,8 +7,11 @@ log:
   filePath: "/etc/traefik/logs/traefik.log"
 
 api:
-  dashboard: false
+  dashboard: true
 
+serversTransport:
+  insecureSkipVerify: true
+  
 entryPoints:
   web:
     address: :80
@@ -29,14 +32,14 @@ providers:
     filename: /etc/traefik/dynamic.yaml
     watch: true
 
-certificatesResolvers:
-  cloudflare:
-    acme:
-      email: na@na.com
-      storage: /var/traefik/certs/cloudflare-acme.json
-      caServer: https://acme-v02.api.letsencrypt.org/directory
-      dnsChallenge:
-        provider: cloudflare
-        resolvers:
-          - "1.1.1.1:53"
-          - "8.8.8.8:53"
+# certificatesResolvers:
+#   cloudflare:
+#     acme:
+#       email: na@na.com
+#       storage: /var/traefik/certs/cloudflare-acme.json
+#       caServer: https://acme-v02.api.letsencrypt.org/directory
+#       dnsChallenge:
+#         provider: cloudflare
+#         resolvers:
+#           - "1.1.1.1:53"
+#           - "8.8.8.8:53"

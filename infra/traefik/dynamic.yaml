@@ -1,1 +1,6 @@
 # Traefik routers and services are directly defined in the docker compose labels but they can also be stated here if you prefer.
+
+tls:
+  certificates: # Self signed openssl certificates
+    - certFile: /var/traefik/certs/cloudsec.crt
+      keyFile: /var/traefik/certs/cloudsec.key

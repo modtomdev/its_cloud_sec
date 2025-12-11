@@ -1,0 +1,31 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowBackendOnly",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::dolc2025-modolo-cloud-sec",
+            "Condition": {
+                "StringNotLike": {
+                    "aws:PrincipalArn": [
+                        "arn:aws:iam::240595528763:user/dolc.modolo.tommaso"
+                    ]
+                }
+            }
+        },
+        {
+            "Sid": "1GBUploadLimit",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::dolc2025-modolo-cloud-sec",
+            "Condition": {
+                "NumericGreaterThan": {
+                    "s3:content-length": "1073741824"
+                }
+            }
+        }
+    ]
+}
