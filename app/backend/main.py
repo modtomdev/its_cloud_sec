@@ -50,6 +50,10 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
          raise HTTPException(status_code=413, detail="File too large. Max size is 1GB.")
 
     try:
+        bucket_check = s3_client.head_bucket(
+            Bucket=S3_BUCKET
+        )
+        print(bucket_check)
         s3_client.upload_fileobj(file.file, S3_BUCKET, file.filename)
         
         file.file.seek(0, 2)
