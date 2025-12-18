@@ -11,7 +11,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro 
       - ./infra/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro   
-      - ./infra/traefik/dynamic.yaml:/etc/traefik/dynamic/dynamic.yaml:ro
+      - ./infra/traefik/dynamic.yaml:/etc/traefik/dynamic.yaml:ro
       - ./infra/traefik/certs/cloudsec.crt:/var/traefik/certs/cloudsec.crt:ro
       - ./infra/traefik/certs/cloudsec.key:/var/traefik/certs/cloudsec.key:ro
     networks:
