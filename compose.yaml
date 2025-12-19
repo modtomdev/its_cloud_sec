@@ -53,8 +53,8 @@ services:
       replicas: 1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
-      - "traefik.http.routers.frontend-secure.rule=Host(`dashboard.itssecapp.com`)"
+      - "traefik.http.routers.secapp-frontend.entrypoints=websecure"
+      - "traefik.http.routers.secapp-frontend.rule=Host(`dashboard.itssecapp.com`)"
       - "traefik.http.services.frontend-service.loadbalancer.server.port=8080"
 
 networks:
