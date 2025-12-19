@@ -49,7 +49,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend-secure.tls=true"
       - "traefik.http.routers.frontend-secure.entrypoints=websecure"
-      - "traefik.http.routers.frontend-secure.rule=Host(`dashboard.itssecapp.com`)"
+      - "traefik.http.routers.frontend-secure.rule=ClientIP(`0.0.0.0`)"
       - "traefik.http.services.frontend-service.loadbalancer.server.port=8080"
 
 networks:
