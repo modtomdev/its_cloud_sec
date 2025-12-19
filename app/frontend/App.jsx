@@ -28,7 +28,7 @@ function App() {
 
     try {
       // Parametrize port
-      const response = await fetch('http://localhost:8000/upload', {
+      const response = await fetch('http://backend:8000/upload', {
         method: 'POST',
         body: formData,
       });
