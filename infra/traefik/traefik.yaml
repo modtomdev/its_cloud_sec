@@ -5,8 +5,7 @@ global:
 log:
   level: DEBUG
 
-api:
-  dashboard: true
+api: {}
 
 serversTransport:
   insecureSkipVerify: true
