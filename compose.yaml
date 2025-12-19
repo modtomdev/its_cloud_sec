@@ -3,25 +3,6 @@
 
 services:
 
-  traefik:
-    image: traefik:v3
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./infra/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
-      - ./infra/traefik/dynamic.yaml:/etc/traefik/dynamic.yaml:ro
-      - ./infra/traefik/certs/cloudsec.crt:/var/traefik/certs/cloudsec.crt:ro
-      - ./infra/traefik/certs/cloudsec.key:/var/traefik/certs/cloudsec.key:ro
-    networks:
-      - app-network
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-
   backend:
     image: secapp-backend:latest
     build: ./app/backend
@@ -41,16 +22,12 @@ services:
     build: ./app/frontend
     networks:
       - app-network
+    ports:
+      - 8080:8080
     depends_on:
       - backend
     deploy:
       replicas: 1
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend-secure.tls=true"
-      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
-      - "traefik.http.routers.frontend-secure.rule=Host(`3.254.195.67`)"
-      - "traefik.http.services.frontend-service.loadbalancer.server.port=8080"
 
 networks:
   app-network:
