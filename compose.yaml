@@ -18,12 +18,6 @@ services:
       - app-network
     deploy:
       replicas: 1
-      labels:
-        - "traefik.http.routers.dashboard.rule=Host(`traefik.example.com`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
-        - "traefik.http.routers.dashboard.service=api@internal"
-        - "traefik.http.routers.dashboard.middlewares=auth"
-        - "traefik.http.middlewares.auth.basicauth.users=test:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/,test2:$$apr1$$d9hr9HBB$$4HxwgUir3HP4EsggP/QNo0"
-        - "traefik.http.services.dummy-svc.loadbalancer.server.port=9999"
       placement:
         constraints:
           - node.role == manager
@@ -53,8 +47,9 @@ services:
       replicas: 1
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.frontend-secure.tls=true"
       - "traefik.http.routers.frontend-secure.entrypoints=websecure"
-      - "traefik.http.routers.frontend-secure.rule=Host(`dashboard.itssecapp.com`)"
+      - "traefik.http.routers.frontend-secure.rule=Host(`ec2-3-254-195-67.eu-west-1.compute.amazonaws.com`)"
       - "traefik.http.services.frontend-service.loadbalancer.server.port=8080"
 
 networks:
