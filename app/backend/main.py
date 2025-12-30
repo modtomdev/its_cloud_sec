@@ -1,4 +1,5 @@
 import boto3
+import uuid
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,8 +72,11 @@ def upload_file(request: Request, file: UploadFile = File(...)):
         timestamp = datetime.now().isoformat()
         client_ip = request.client.host if request.client else "unknown"
         
+        # id generation for dynamo table
+        upload_id = str(uuid.uuid4()) 
         table.put_item(
             Item={
+                'id': upload_id,
                 'filename': file.filename,
                 'upload_timestamp': timestamp,
                 'file_size_bytes': file_size,
