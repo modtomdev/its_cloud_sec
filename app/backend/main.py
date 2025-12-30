@@ -49,31 +49,31 @@ table = dynamodb.Table(DYNAMO_TABLE)
 MAX_FILE_SIZE = 1 * 1024 * 1024 * 1024  # 1 GB
 
 @app.post("/upload")
-async def upload_file(request: Request, file: UploadFile = File(...)):
+def upload_file(request: Request, file: UploadFile = File(...)):
     content_length = request.headers.get('content-length')
     if content_length and int(content_length) > MAX_FILE_SIZE:
          raise HTTPException(status_code=413, detail="File too large. Max size is 1GB.")
 
     try:
-        bucket_test = s3_client.head_bucket(
-            Bucket=S3_BUCKET
-        )
-    except :
-        print(bucket_test)
-        raise s3_client.exceptions.NoSuchBucket
+        s3_client.head_bucket(Bucket=S3_BUCKET)
+    except Exception as e:
+        print(f"Bucket Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Bucket configuration error")
 
     try:
-        s3_client.upload_fileobj(file.file, S3_BUCKET, file.filename)
-        
+        # calculates file dimension
         file.file.seek(0, 2)
         file_size = file.file.tell()
+        file.file.seek(0)
+
+        s3_client.upload_fileobj(file.file, S3_BUCKET, file.filename)
         
         timestamp = datetime.now().isoformat()
-        client_ip = request.client.host
+        client_ip = request.client.host if request.client else "unknown"
         
         table.put_item(
             Item={
-                'filename': file.filename,  # Partition Key (Primary Key recommendation)
+                'filename': file.filename,
                 'upload_timestamp': timestamp,
                 'file_size_bytes': file_size,
                 'client_ip': client_ip
@@ -89,4 +89,3 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
     except Exception as e:
         print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    
