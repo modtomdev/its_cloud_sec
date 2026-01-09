@@ -1,3 +1,16 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "eu-west-1"
+}
+
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -77,27 +90,25 @@ resource "aws_security_group" "bastion_sg" {
   }
 }
 
-resource "aws_security_group" "docker_host_sg" {
-  name   = "docker-host-sg"
+resource "aws_security_group" "app_host_sg" {
+  name   = "app-host-sg"
   vpc_id = aws_vpc.main.id
+  
   ingress {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
     security_groups = [aws_security_group.bastion_sg.id]
   }
+  
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] 
   }
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+
+  # Uscita libera (necessaria per apt-get install)
   egress {
     from_port   = 0
     to_port     = 0
@@ -106,12 +117,16 @@ resource "aws_security_group" "docker_host_sg" {
   }
 }
 
-data "aws_ami" "amazon_linux" {
+data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"] # canonical
   filter {
     name   = "name"
-    values = ["al2023-ami-2023.*-x86_64"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
 }
 
@@ -132,7 +147,7 @@ resource "local_file" "ssh_key" {
 }
 
 resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.amazon_linux.id
+  ami                         = data.aws_ami.ubuntu.id
   instance_type               = "t3.nano"
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.bastion_sg.id]
@@ -142,50 +157,37 @@ resource "aws_instance" "bastion" {
 }
 
 resource "aws_instance" "docker_host" {
-  ami                    = data.aws_ami.amazon_linux.id
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t3.micro"
   subnet_id              = aws_subnet.private.id
-  vpc_security_group_ids = [aws_security_group.docker_host_sg.id]
+  vpc_security_group_ids = [aws_security_group.app_host_sg.id]
   key_name               = aws_key_pair.kp.key_name
+  
   user_data              = <<-EOF
               #!/bin/bash
-              dnf update -y
-              dnf install -y docker
+              apt-get update -y
+              apt-get install -y docker.io
               systemctl start docker
               systemctl enable docker
-              usermod -aG docker ec2-user
-              docker run -d -p 80:80 -p 443:443 --name traefik traefik:v2.9 --api.insecure=true --providers.docker=true
+              usermod -aG docker ubuntu
               EOF
-  tags                   = { Name = "Docker-Traefik-Host" }
+              
+  tags                   = { Name = "Docker-Host" }
 }
 
 resource "aws_lb" "nlb" {
-  name               = "traefik-nlb"
+  name               = "app-nlb"
   internal           = false
   load_balancer_type = "network"
   subnets            = [aws_subnet.public.id]
 }
 
 resource "aws_lb_target_group" "tg_80" {
-  name        = "tg-traefik-80"
+  name        = "tg-app-80"
   port        = 80
   protocol    = "TCP"
   vpc_id      = aws_vpc.main.id
   target_type = "instance"
-  health_check {
-    protocol = "TCP"
-  }
-}
-
-resource "aws_lb_target_group" "tg_443" {
-  name        = "tg-traefik-443"
-  port        = 443
-  protocol    = "TCP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "instance"
-  health_check {
-    protocol = "TCP"
-  }
 }
 
 resource "aws_lb_listener" "listener_80" {
@@ -198,24 +200,8 @@ resource "aws_lb_listener" "listener_80" {
   }
 }
 
-resource "aws_lb_listener" "listener_443" {
-  load_balancer_arn = aws_lb.nlb.arn
-  port              = "443"
-  protocol          = "TCP"
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.tg_443.arn
-  }
-}
-
 resource "aws_lb_target_group_attachment" "attach_80" {
   target_group_arn = aws_lb_target_group.tg_80.arn
   target_id        = aws_instance.docker_host.id
   port             = 80
-}
-
-resource "aws_lb_target_group_attachment" "attach_443" {
-  target_group_arn = aws_lb_target_group.tg_443.arn
-  target_id        = aws_instance.docker_host.id
-  port             = 443
 }
