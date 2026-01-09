@@ -108,7 +108,6 @@ resource "aws_security_group" "app_host_sg" {
     cidr_blocks = ["0.0.0.0/0"] 
   }
 
-  # Uscita libera (necessaria per apt-get install)
   egress {
     from_port   = 0
     to_port     = 0
