@@ -7,9 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 origins = [
-    "http://frontend",
-    "*"
-]
+    "http://frontend"]
 
 app.add_middleware(
     CORSMiddleware,
